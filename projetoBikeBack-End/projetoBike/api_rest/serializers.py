@@ -11,5 +11,5 @@ class UserSerializer(serializers.ModelSerializer):
 
 class BikeSerializer(serializers.ModelSerializer):
         class Meta: 
-                model:Bike
+                model=Bike
                 fields = "__all__"
