@@ -4,9 +4,9 @@ from django.http import HttpResponse, JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-
-from .models import User
-from .serializers import UserSerializer
+from django.shortcuts import get_object_or_404
+from .models import User,Bike
+from .serializers import UserSerializer,BikeSerializer
 
 import json
 
@@ -56,24 +56,67 @@ def delete_user(request, id):
             # Outros erros
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        
 
-     
+@api_view(['PUT'])
+def att_user(request, id):
+    user = get_object_or_404(User, pk=id)  # Trata o erro caso o usuário não seja encontrado
+    serializer = UserSerializer(user, data=request.data)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)  # Status 200 para sucesso
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  # Retorna erros de validação
+    
+
+
+@api_view(['GET'])
+def get_bikes(request):
+    bikes = Bike.objects.all()
+    serializer = BikeSerializer(bikes, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def get_bike_by_id(request, id):
+    bike = get_object_or_404(Bike, pk=id)
+    serializer = BikeSerializer(bike)
+    return Response(serializer.data)
+
+@api_view(['POST'])
+def bike_create(request):
+    serializer = BikeSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PATCH'])
+def bike_update(request, id):
+    bike = get_object_or_404(Bike, pk=id)
+    serializer = BikeSerializer(bike, data=request.data, partial=True)  # 'partial=True' permite atualização parcial
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['DELETE'])
+def bike_delete(request, id):
+    bike = get_object_or_404(Bike, pk=id)
+    bike.delete()
+    return Response(messsage="Bicicleta deletada",status=status.HTTP_204_NO_CONTENT)
 
 
 
-
-
-
-
-
-
-""" def databaseEmDjango():
-    data = User.objects.get(pk="user_id") #objeto
-    data = User.objects.filter( bike_user_id = 1)#QUERYSET
-
-    data = User.objects.exclude(bike_user_id = 2)#QUERYSET
-
-    data.save()
-
-    data.delete() """
+@api_view(['GET'])
+def get_bikes_by_user(request, user_id):
+    # Obtém o usuário ou retorna 404 se não existir
+    user = get_object_or_404(User, pk=user_id)
+    
+    # Busca todas as bicicletas associadas ao usuário
+    bikes = Bike.objects.filter(bike_user_id=user)
+    
+    # Serializa as bicicletas
+    serializer = BikeSerializer(bikes, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
