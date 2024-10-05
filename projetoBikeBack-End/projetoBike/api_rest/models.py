@@ -6,7 +6,7 @@ class User(models.Model):
     user_email = models.EmailField(default='')
     user_age = models.IntegerField(default=0)
     user_password = models.CharField(default="12345678",max_length = 8)
-    
+    user_plan = models.CharField(default=0,max_length=30)
     def __str__(self):
         return f'Id:{self.user_id} | fullname: {self.user_fullname}'
 
