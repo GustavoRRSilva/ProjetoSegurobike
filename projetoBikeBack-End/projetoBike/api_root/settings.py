@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'api_rest',
 ]
 
+<<<<<<< HEAD
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
@@ -49,6 +50,8 @@ REST_FRAMEWORK = {
 
 
 
+=======
+>>>>>>> 231d2694fe2ea5d208e3f1bb90acd6ec1ef22368
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
