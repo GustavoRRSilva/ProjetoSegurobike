@@ -1,5 +1,5 @@
 from django.shortcuts import render
-<<<<<<< HEAD
+
 from django.http import HttpResponse, JsonResponse
 
 from rest_framework.decorators import api_view
@@ -121,7 +121,4 @@ def get_bikes_by_user(request, user_id):
     # Serializa as bicicletas
     serializer = BikeSerializer(bikes, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
-=======
 
-# Create your views here.
->>>>>>> 231d2694fe2ea5d208e3f1bb90acd6ec1ef22368
