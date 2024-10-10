@@ -1,7 +1,7 @@
 from django.shortcuts import render
 
 from django.http import HttpResponse, JsonResponse
-
+from django.contrib.auth import authenticate
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -21,14 +21,22 @@ def get_users(request):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-def get_by_id(request,id):
-        try:
-             user = User.objects.get(pk = id)
-        except:
-             return Response(status = status.HTTP_404_NOT_FOUND)
-        if request.method == 'GET':
-            serializer = UserSerializer(user)
-            return Response(serializer.data)
+def get_by_id(request, id):
+    try:
+        user = User.objects.get(pk=id)
+        bikes = Bike.objects.filter(bike_user_id=id) 
+        user_serializer = UserSerializer(user)
+        bike_serializer = BikeSerializer(bikes, many=True)
+        
+        return Response({
+            "user": user_serializer.data,
+            "bikes": bike_serializer.data
+        }, status=status.HTTP_200_OK)
+
+    except User.DoesNotExist:
+        return Response({"error": "Usuário não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:  # Captura qualquer outra exceção
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
  
 
 @api_view(['POST'])
@@ -108,17 +116,30 @@ def bike_delete(request, id):
     bike.delete()
     return Response(messsage="Bicicleta deletada",status=status.HTTP_204_NO_CONTENT)
 
+@api_view(['POST'])
+def login_view(request):
+    email = request.data.get('email')
+    password = request.data.get('password')
 
+    try:
+        # Tente encontrar o usuário pelo email
+        user = User.objects.get(user_email=email)
 
-@api_view(['GET'])
-def get_bikes_by_user(request, user_id):
-    # Obtém o usuário ou retorna 404 se não existir
-    user = get_object_or_404(User, pk=user_id)
-    
-    # Busca todas as bicicletas associadas ao usuário
-    bikes = Bike.objects.filter(bike_user_id=user)
-    
-    # Serializa as bicicletas
-    serializer = BikeSerializer(bikes, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
-
+        # Agora autentique o usuário com a senha
+        if user.user_password == password:  # Se as senhas não estiverem criptografadas, use este método
+            # Se a autenticação for bem-sucedida, retornamos as informações do usuário e suas bicicletas
+            user_serializer = UserSerializer(user)
+            
+            # Obtenha as bicicletas do usuário
+            bikes = Bike.objects.filter(bike_user_id=user)  # Filtre as bicicletas pelo usuário
+            bike_serializer = BikeSerializer(bikes, many=True)  # Serialize as bicicletas
+            
+            # Retorne as informações do usuário e suas bicicletas
+            return Response({
+                "user": user_serializer.data,
+                "bikes": bike_serializer.data
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": "Credenciais inválidas"}, status=status.HTTP_401_UNAUTHORIZED)
+    except User.DoesNotExist:
+        return Response({"error": "Credenciais inválidas"}, status=status.HTTP_401_UNAUTHORIZED)
